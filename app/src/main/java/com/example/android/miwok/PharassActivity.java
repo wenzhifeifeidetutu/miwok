@@ -1,5 +1,7 @@
 package com.example.android.miwok;
 
+import android.content.Context;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -12,10 +14,29 @@ import java.util.ArrayList;
 public class PharassActivity extends AppCompatActivity {
     private ListView pharassListView ;
     private  MediaPlayer mediaPlayer;
+
+    private AudioManager audioManager;
+
+    AudioManager.OnAudioFocusChangeListener onAudioFocusChangeListener = new AudioManager.OnAudioFocusChangeListener() {
+        @Override
+        public void onAudioFocusChange(int focusChange) {
+            if (focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT || focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK) {
+                mediaPlayer.pause();
+                mediaPlayer.seekTo(0);
+            }else if (focusChange == AudioManager.AUDIOFOCUS_LOSS){
+                mediaPlayRelease();
+            }else if (focusChange == AudioManager.AUDIOFOCUS_GAIN) {
+                mediaPlayer.start();
+            }
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_pharass);
+        audioManager = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
+
 
         final ArrayList<Pharass> pharassArrayList =new ArrayList<Pharass>();
         //clear this imageId is -1;
@@ -43,15 +64,21 @@ public class PharassActivity extends AppCompatActivity {
               Pharass pharass =  pharassArrayList.get(position);
                 mediaPlayRelease();
 
-                mediaPlayer = MediaPlayer.create(PharassActivity.this, pharass.getPharassVoiceId()  );
-                mediaPlayer.start();
-                //如果播放完就release掉
-                mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                    @Override
-                    public void onCompletion(MediaPlayer mp) {
-                        mediaPlayRelease();
-                    }
-                });
+                int result = audioManager.requestAudioFocus(onAudioFocusChangeListener, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
+                if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+                    mediaPlayRelease();
+                    mediaPlayer = MediaPlayer.create(PharassActivity.this, pharass.getPharassVoiceId()  );
+                    mediaPlayer.start();
+                    //如果播放完就release掉
+                    mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                        @Override
+                        public void onCompletion(MediaPlayer mp) {
+                            mediaPlayRelease();
+                        }
+                    });
+                }
+
+
             }
         });
 

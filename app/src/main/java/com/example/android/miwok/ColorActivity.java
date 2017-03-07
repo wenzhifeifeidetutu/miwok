@@ -1,5 +1,7 @@
 package com.example.android.miwok;
 
+import android.content.Context;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -12,11 +14,30 @@ import java.util.ArrayList;
 public class ColorActivity extends AppCompatActivity {
     private MediaPlayer mediaPlayer;
     private ListView colorList;
+
+    private AudioManager audioManager;
+
+    //设置全局监听器
+    AudioManager.OnAudioFocusChangeListener onAudioFocusChangeListener = new AudioManager.OnAudioFocusChangeListener() {
+        @Override
+        public void onAudioFocusChange(int focusChange) {
+            if (focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK || focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT) {
+                mediaPlayer.pause();
+                mediaPlayer.seekTo(0);
+            }else if (focusChange == AudioManager.AUDIOFOCUS_LOSS){
+                mediaPlayerRelease();
+            }else if (focusChange == AudioManager.AUDIOFOCUS_GAIN) {
+                mediaPlayer.start();
+            }
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_color);
         colorList = (ListView)findViewById(R.id.color_list);
+        audioManager = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
 
         final ArrayList<Color> colorArrayList = new ArrayList<Color>();
         colorArrayList.add(new Color("red", "weṭeṭṭi",R.drawable.color_red, R.raw.color_red));
@@ -36,15 +57,23 @@ public class ColorActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Color color = colorArrayList.get(position);
+                //如果这里不是先释放会出现空的mediaplay方法， 因为还没初始化
                 mediaPlayerRelease();
-                mediaPlayer = MediaPlayer.create(ColorActivity.this, color.getColorVoiceID());
-                mediaPlayer.start();
-                mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                    @Override
-                    public void onCompletion(MediaPlayer mp) {
-                        mediaPlayerRelease();
-                    }
-                });
+
+                //获取AudioManager服务
+                int audioFocusResult = audioManager.requestAudioFocus(onAudioFocusChangeListener, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
+                if (audioFocusResult == AudioManager.AUDIOFOCUS_REQUEST_GRANTED){
+                    mediaPlayerRelease();
+                    mediaPlayer = MediaPlayer.create(ColorActivity.this, color.getColorVoiceID());
+                    mediaPlayer.start();
+                    mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                        @Override
+                        public void onCompletion(MediaPlayer mp) {
+                            mediaPlayerRelease();
+                        }
+                    });
+                }
+
             }
         });
 
@@ -56,6 +85,7 @@ public class ColorActivity extends AppCompatActivity {
         }
 
         mediaPlayer = null;
+        audioManager.abandonAudioFocus(onAudioFocusChangeListener);
     }
 
 
