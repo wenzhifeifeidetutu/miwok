@@ -63,4 +63,11 @@ public class FamilyActivity extends AppCompatActivity {
 
     }
 
+    @Override
+    public void onStop(){
+        super.onStop();
+        mediaPlayer.release();
+
+    }
+
 }

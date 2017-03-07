@@ -70,4 +70,10 @@ public class NumberActivity extends AppCompatActivity {
 
         mediaPlayer = null;
     }
+
+    @Override
+    public void onStop(){
+        super.onStop();
+        mediaPlayRelease();
+    }
 }
