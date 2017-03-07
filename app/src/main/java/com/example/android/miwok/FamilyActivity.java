@@ -99,7 +99,8 @@ public class FamilyActivity extends AppCompatActivity {
     @Override
     public void onStop(){
         super.onStop();
-        mediaPlayer.release();
+        //在释放mediaplay之前必须初始化不然是个空的方法
+        mediaPlayRelease();
 
     }
 
