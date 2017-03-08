@@ -31,16 +31,24 @@
         </activity>
         <activity
             android:label="Numbers"
-            android:name=".NumberActivity" />
+            android:name=".NumberActivity"
+            android:parentActivityName=".MainActivity"
+            />
         <activity
             android:label="Family"
-            android:name=".FamilyActivity" />
+            android:name=".FamilyActivity"
+            android:parentActivityName=".MainActivity"
+            />
         <activity
             android:label="Color"
-            android:name=".ColorActivity" />
+            android:name=".ColorActivity"
+            android:parentActivityName=".MainActivity"
+            />
         <activity
             android:label="Pharass"
-            android:name=".PharassActivity"></activity>
+            android:name=".PharassActivity"
+            android:parentActivityName=".MainActivity"
+            ></activity>
     </application>
 
 </manifest>
